@@ -9,4 +9,5 @@ public interface GroupRepository extends JpaRepository<Group, UUID> {
 
     List<Group> findByOrganization_Id(UUID organizationId);
 
+    List<Group> findByOrganization_IdAndNameContainingIgnoreCase(UUID organizationId, String name);
 }
