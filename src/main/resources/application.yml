@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: crm-backend
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:crm_db}
+    username: ${DB_USER:crm_user}
+    password: ${DB_PASSWORD:crm_password}
+
+  jpa:
+    # validate (not update/create): the schema is driven by Flyway, never by Hibernate.
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+server:
+  port: ${SERVER_PORT:8080}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

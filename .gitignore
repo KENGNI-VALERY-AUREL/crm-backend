@@ -1,0 +1,15 @@
+# Maven
+target/
+*.class
+
+# Secrets (never committed — see cahier des charges section 13.5)
+.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE (settings.json and extensions.json ARE kept — shared with the team)
+.idea/
+*.iml
+.vscode/*.log

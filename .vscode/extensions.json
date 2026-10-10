@@ -1,0 +1,11 @@
+{
+  "recommendations": [
+    "vscjava.vscode-java-pack",
+    "vmware.vscode-spring-boot",
+    "vscjava.vscode-spring-initializr",
+    "vscjava.vscode-maven",
+    "ms-azuretools.vscode-docker",
+    "redhat.vscode-yaml",
+    "mhutchie.git-graph"
+  ]
+}
