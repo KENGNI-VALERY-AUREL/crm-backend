@@ -76,6 +76,15 @@ of this repository — not as a full project archive each time.
    Should list: `organizations`, `groups`, `users`, `supervisions`, and
    `flyway_schema_history` (Flyway's own migration-tracking table).
 
+## Testing the API with Swagger
+
+After starting the application, open [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html).
+The OpenAPI specification is available at [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs).
+
+Use `POST /auth/register` or `POST /auth/login` to get a JWT in the response. Select
+**Authorize** in Swagger UI and enter the token value; Swagger UI will send it as a
+`Bearer` token when calling endpoints that require authentication.
+
 ## Package structure
 
 Each module is organized by layer, not as one flat folder:

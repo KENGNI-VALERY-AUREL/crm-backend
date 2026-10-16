@@ -4,8 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.MappedSuperclass;
 import java.time.Instant;
-import lombok.Getter;
-import lombok.Setter;
+
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -16,15 +15,15 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
  * consistency of HISTORIQUE_ETAPE and HISTORIQUE_ENVOI_AUTO).
  * <p>
  * {@code createdDate} and {@code updatedDate} are populated automatically by
- * Spring Data JPA Auditing (see {@link com.crmapp.backend.common.config.JpaAuditingConfig}) —
+ * Spring Data JPA Auditing (see
+ * {@link com.crmapp.backend.common.config.JpaAuditingConfig}) —
  * no manual {@code @PrePersist} logic needed in subclasses.
  * <p>
  * {@code createdBy} / {@code updatedBy} are intentionally left out for now:
  * they require an {@code AuditorAware} bean tied to the authenticated user,
  * which will be added once the authentication module (step 3) is in place.
  */
-@Getter
-@Setter
+
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
 public abstract class BaseEntity {
