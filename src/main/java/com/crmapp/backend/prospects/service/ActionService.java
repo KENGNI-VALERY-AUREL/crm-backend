@@ -44,7 +44,6 @@ public class ActionService {
         prospectService.getOwnedEntity(prospectId); // ownership check; result unused on purpose
 
         return actionRepository.findByProspect_Id(prospectId).stream()
-                .filter(a -> !a.isDeleted())
                 .map(this::toResponse)
                 .toList();
     }
@@ -54,7 +53,7 @@ public class ActionService {
         prospectService.getOwnedEntity(prospectId); // ownership check; result unused on purpose
 
         Action action = actionRepository.findById(actionId)
-                .filter(a -> !a.isDeleted() && a.getProspect().getId().equals(prospectId))
+                .filter(a -> a.getProspect().getId().equals(prospectId))
                 .orElseThrow(() -> new ActionNotFoundException(actionId));
 
         action.setStatus(request.status());

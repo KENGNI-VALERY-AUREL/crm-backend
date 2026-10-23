@@ -4,6 +4,7 @@ import com.crmapp.backend.common.security.TenantContext;
 import com.crmapp.backend.identity.enums.UserRole;
 import com.crmapp.backend.identity.repository.GroupRepository;
 import com.crmapp.backend.identity.repository.UserRepository;
+import com.crmapp.backend.pipeline.service.PipelineService;
 import com.crmapp.backend.prospects.dto.CreateProspectRequest;
 import com.crmapp.backend.prospects.dto.ProspectResponse;
 import com.crmapp.backend.prospects.enums.ProspectSource;
@@ -21,15 +22,18 @@ public class ProspectService {
     private final ProspectRepository prospectRepository;
     private final GroupRepository groupRepository;
     private final UserRepository userRepository;
+    private final PipelineService pipelineService;
 
     public ProspectService(
             ProspectRepository prospectRepository,
             GroupRepository groupRepository,
-            UserRepository userRepository
+            UserRepository userRepository,
+            PipelineService pipelineService
     ) {
         this.prospectRepository = prospectRepository;
         this.groupRepository = groupRepository;
         this.userRepository = userRepository;
+        this.pipelineService = pipelineService;
     }
 
     /**
@@ -44,6 +48,7 @@ public class ProspectService {
         Prospect prospect = new Prospect();
         prospect.setGroup(groupRepository.getReferenceById(tenant.getGroupId()));
         prospect.setAssignedUser(userRepository.getReferenceById(tenant.getUserId()));
+        prospect.setCurrentStage(pipelineService.getInitialStage(tenant.getOrganizationId()));
         prospect.setName(request.name());
         prospect.setPhone(request.phone());
         prospect.setEmail(request.email());
@@ -66,10 +71,7 @@ public class ProspectService {
                 ? prospectRepository.findByGroup_IdAndAssignedUser_Id(tenant.getGroupId(), tenant.getUserId())
                 : prospectRepository.findByGroup_Id(tenant.getGroupId());
 
-        return prospects.stream()
-                .filter(p -> !p.isDeleted())
-                .map(this::toResponse)
-                .toList();
+        return prospects.stream().map(this::toResponse).toList();
     }
 
     @Transactional(readOnly = true)
@@ -78,21 +80,28 @@ public class ProspectService {
     }
 
     /**
-     * Loads a prospect and verifies it belongs to the caller's group.
+     * Loads a prospect and verifies the caller may access it: it must belong to
+     * the caller's group and, for a MEMBER, be assigned to them (cahier des
+     * charges, section 3 — "gère uniquement les prospects qui lui sont assignés").
      * Package-visible on purpose: other services (e.g. actions) reuse this
      * ownership check instead of querying {@link ProspectRepository} directly,
      * so the rule lives in exactly one place.
      */
     @Transactional(readOnly = true)
     public Prospect getOwnedEntity(UUID prospectId) {
-        UUID groupId = TenantContext.get().getGroupId();
+        TenantContext tenant = TenantContext.get();
+        UUID groupId = tenant.getGroupId();
 
         Prospect prospect = prospectRepository.findById(prospectId)
-                .filter(p -> !p.isDeleted())
                 .orElseThrow(() -> new ProspectNotFoundException(prospectId));
 
         if (!prospect.getGroup().getId().equals(groupId)) {
             // Same exception as "not found": never reveal a prospect exists in another tenant.
+            throw new ProspectNotFoundException(prospectId);
+        }
+
+        if (tenant.getRole() == UserRole.MEMBER
+                && !prospect.getAssignedUser().getId().equals(tenant.getUserId())) {
             throw new ProspectNotFoundException(prospectId);
         }
 
@@ -108,6 +117,7 @@ public class ProspectService {
                 prospect.getCompanyName(),
                 prospect.getSource(),
                 prospect.getAssignedUser().getId(),
+                prospect.getCurrentStage().getId(),
                 prospect.getCreatedDate()
         );
     }

@@ -6,9 +6,12 @@ the full specification — section 7.3 for the data model, section 12 for the ar
 
 ## Current step
 
-Step 2: initial Flyway migration + JPA entities for the `identity` module
-(`Organization`, `Group`, `User`, `Supervision`). No REST endpoints or authentication
-logic yet — that's step 3.
+Step 6: `pipeline` module (Module 3) — default pipeline created at sign-up, stage
+configuration (HOST / SUPER_ADMIN), Kanban board, prospect stage moves with an
+append-only history (`V3__pipeline_schema.sql`).
+
+Done so far: skeleton + identity (1-2), JWT auth + tenant context (3), prospects &
+actions (4-5), pipeline (6).
 
 ## ⚠️ First thing to do with this version: initialize Git
 
@@ -101,8 +104,8 @@ identity/
 | Package | Responsibility | Current content |
 |---|---|---|
 | `identity` | Authentication, organizations, groups, roles (RBAC) | Entities + repositories (step 2) |
-| `prospects` | Prospect records and follow-up actions | Not yet implemented |
-| `pipeline` | Sales pipelines, stages, stage-change history | Not yet implemented |
+| `prospects` | Prospect records and follow-up actions | Implemented (steps 4-5) |
+| `pipeline` | Sales pipelines, stages, stage-change history, Kanban | Implemented (step 6) |
 | `communication` | Message templates, SMS/WhatsApp/Email workflows | Not yet implemented |
 | `billing` | Packs, subscriptions, transactions, Mobile Money | Not yet implemented |
 | `reporting` | Dashboards per role | Not yet implemented |
@@ -121,8 +124,19 @@ identity/
   8.8). `createdDate` / `updatedDate` are filled in automatically by Spring Data JPA
   Auditing (`JpaAuditingConfig`) — no manual code needed in each entity.
 
+## Pipeline endpoints (step 6)
+
+| Method | Path | Role |
+|---|---|---|
+| GET | `/pipelines` | any |
+| GET | `/pipelines/{id}/board` | any (MEMBER sees only own prospects) |
+| POST | `/pipelines/{id}/stages` | HOST / SUPER_ADMIN |
+| PATCH | `/pipelines/{id}/stages/{stageId}` | HOST / SUPER_ADMIN |
+| DELETE | `/pipelines/{id}/stages/{stageId}` | HOST / SUPER_ADMIN (409 if the stage has prospects) |
+| PATCH | `/prospects/{id}/stage` | any with access to the prospect (`reason` required for LOST stages) |
+| GET | `/prospects/{id}/stage-history` | any with access to the prospect |
+
 ## Next step
 
-Authentication REST endpoints (`POST /auth/register`, `POST /auth/login`, JWT
-generation), then the security filter that injects `organizationId` / `groupId` into the
-context of every request (multi-tenant isolation, arbitrage 8.6).
+Group & user management endpoints (`/groupes`, `/utilisateurs`: UC-201, UC-202, UC-301),
+so a HOST can invite members and reassign prospects.

@@ -3,6 +3,7 @@ package com.crmapp.backend.prospects.model;
 import com.crmapp.backend.common.model.BaseEntity;
 import com.crmapp.backend.identity.model.Group;
 import com.crmapp.backend.identity.model.User;
+import com.crmapp.backend.pipeline.model.PipelineStage;
 import com.crmapp.backend.prospects.enums.ProspectSource;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -16,6 +17,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.util.UUID;
+import org.hibernate.annotations.SQLRestriction;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -24,11 +26,11 @@ import lombok.Setter;
  * A prospect/contact record (cahier des charges, section 7.3, entity
  * "PROSPECT"). Owned at the group level and assigned to one member.
  * <p>
- * Does not yet reference a pipeline stage (see the V2 migration note) — that
- * link is added once the pipeline module exists.
+ * Sits on exactly one pipeline stage at a time ({@code currentStage}, added in V3).
  */
 @Entity
 @Table(name = "prospects")
+@SQLRestriction("is_deleted = false")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -45,6 +47,10 @@ public class Prospect extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "assigned_user_id", nullable = false)
     private User assignedUser;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "current_stage_id", nullable = false)
+    private PipelineStage currentStage;
 
     @Column(nullable = false)
     private String name;

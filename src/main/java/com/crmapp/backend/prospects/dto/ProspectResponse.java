@@ -12,6 +12,7 @@ public record ProspectResponse(
         String companyName,
         ProspectSource source,
         UUID assignedUserId,
+        UUID currentStageId,
         Instant createdDate
 ) {
 }

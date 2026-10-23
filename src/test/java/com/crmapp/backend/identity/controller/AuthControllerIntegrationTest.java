@@ -4,10 +4,14 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import com.crmapp.backend.identity.dto.LoginRequest;
 import com.crmapp.backend.identity.dto.RegisterRequest;
+import com.crmapp.backend.identity.model.User;
+import com.crmapp.backend.identity.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -42,6 +46,9 @@ class AuthControllerIntegrationTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @Test
     void register_withNewEmail_returns201AndToken() throws Exception {
@@ -124,6 +131,21 @@ class AuthControllerIntegrationTest {
                 .andExpect(jsonPath("$.code").value(401))
                 .andExpect(jsonPath("$.message").value("Authentication is required."))
                 .andExpect(jsonPath("$.data").doesNotExist());
+    }
+
+    @Test
+    void userRepository_ignoresSoftDeletedUsers() throws Exception {
+        registerUser("deleted-user@test.com");
+        User user = userRepository.findByEmail("deleted-user@test.com").orElseThrow();
+        user.markAsDeleted();
+        userRepository.saveAndFlush(user);
+
+        assertFalse(userRepository.findById(user.getId()).isPresent());
+        assertFalse(userRepository.findAllById(List.of(user.getId())).stream()
+                .anyMatch(found -> found.getId().equals(user.getId())));
+        assertFalse(userRepository.existsById(user.getId()));
+        assertFalse(userRepository.findAll().stream()
+                .anyMatch(found -> found.getId().equals(user.getId())));
     }
 
     private void registerUser(String email) throws Exception {

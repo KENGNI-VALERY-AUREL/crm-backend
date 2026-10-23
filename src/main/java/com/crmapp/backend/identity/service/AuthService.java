@@ -13,6 +13,7 @@ import com.crmapp.backend.identity.model.User;
 import com.crmapp.backend.identity.repository.GroupRepository;
 import com.crmapp.backend.identity.repository.OrganizationRepository;
 import com.crmapp.backend.identity.repository.UserRepository;
+import com.crmapp.backend.pipeline.service.PipelineService;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -28,18 +29,21 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final PipelineService pipelineService;
 
     public AuthService(
             OrganizationRepository organizationRepository,
             GroupRepository groupRepository,
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
-            JwtService jwtService) {
+            JwtService jwtService,
+            PipelineService pipelineService) {
         this.organizationRepository = organizationRepository;
         this.groupRepository = groupRepository;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.pipelineService = pipelineService;
     }
 
     @Transactional
@@ -51,6 +55,7 @@ public class AuthService {
         Organization organization = new Organization();
         organization.setCompanyName(request.companyName());
         organization = organizationRepository.save(organization);
+        pipelineService.createDefaultPipeline(organization);
 
         Group defaultGroup = new Group();
         defaultGroup.setOrganization(organization);
