@@ -13,6 +13,7 @@ import com.crmapp.backend.identity.model.User;
 import com.crmapp.backend.identity.repository.GroupRepository;
 import com.crmapp.backend.identity.repository.OrganizationRepository;
 import com.crmapp.backend.identity.repository.UserRepository;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -71,6 +72,7 @@ public class AuthService {
     @Transactional(readOnly = true)
     public AuthResponse login(LoginRequest request) {
         User user = userRepository.findByEmail(request.email())
+                .filter(found -> !found.isDeleted())
                 .orElseThrow(InvalidCredentialsException::new);
 
         if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {

@@ -9,9 +9,11 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 
 /**
  * An organization — a company account, or the single-person space created
@@ -20,8 +22,8 @@ import lombok.NoArgsConstructor;
  */
 @Entity
 @Table(name = "organizations")
-@Data
-@EqualsAndHashCode(callSuper = false)
+@Getter
+@Setter
 @NoArgsConstructor
 public class Organization extends BaseEntity {
 

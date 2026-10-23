@@ -1,6 +1,7 @@
 /**
  * Prospects module — prospect records and follow-up actions.
  * <p>
- * Main entities (cahier des charges, section 7.3): PROSPECT, ACTION.
+ * Sub-packages: {@code model} (entities), {@code enums}, {@code repository}.
+ * {@code service} and {@code controller} will be added next.
  */
 package com.crmapp.backend.prospects;
