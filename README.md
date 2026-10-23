@@ -6,12 +6,12 @@ the full specification — section 7.3 for the data model, section 12 for the ar
 
 ## Current step
 
-Step 6: `pipeline` module (Module 3) — default pipeline created at sign-up, stage
-configuration (HOST / SUPER_ADMIN), Kanban board, prospect stage moves with an
-append-only history (`V3__pipeline_schema.sql`).
+Step 7: group & user management — UC-301 (SUPER_ADMIN structures the company), UC-201
+(HOST manages the members of their group), UC-202 (reassign a prospect).
+`V4__users_email_unique_active.sql` makes email uniqueness apply to active users only.
 
 Done so far: skeleton + identity (1-2), JWT auth + tenant context (3), prospects &
-actions (4-5), pipeline (6).
+actions (4-5), pipeline (6), groups & users (7).
 
 ## ⚠️ First thing to do with this version: initialize Git
 
@@ -136,7 +136,28 @@ identity/
 | PATCH | `/prospects/{id}/stage` | any with access to the prospect (`reason` required for LOST stages) |
 | GET | `/prospects/{id}/stage-history` | any with access to the prospect |
 
+## Group & user endpoints (step 7)
+
+| Method | Path | Role |
+|---|---|---|
+| GET | `/groups` | HOST (own group) / SUPER_ADMIN (all) |
+| POST | `/groups` | SUPER_ADMIN |
+| PATCH | `/groups/{id}` (rename) | SUPER_ADMIN |
+| GET | `/users?groupId=` | HOST (own group) / SUPER_ADMIN (all) |
+| POST | `/users` | SUPER_ADMIN (HOST or MEMBER, any group) / HOST (MEMBER, own group) |
+| PATCH | `/users/{id}/role` | SUPER_ADMIN |
+| DELETE | `/users/{id}` | SUPER_ADMIN / HOST (members only); 409 if the user still owns prospects |
+| PATCH | `/prospects/{id}/assignee` | HOST / SUPER_ADMIN; target must be in the prospect's group |
+
+V1 limits (cahier des charges, section 8.10): a HOST manages only their own group;
+supervising several groups (`supervisions` table) is V2.
+
+## Known gap
+
+The JWT carries `role` and `groupId` and is not re-checked against the database: a removed
+user, or one whose role changed, keeps the old rights until the token expires
+(`JWT_EXPIRATION_MS`, 24 h by default).
+
 ## Next step
 
-Group & user management endpoints (`/groupes`, `/utilisateurs`: UC-201, UC-202, UC-301),
-so a HOST can invite members and reassign prospects.
+Billing module: packs, subscriptions, quota counter, Mobile Money webhooks (Module 6).

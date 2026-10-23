@@ -1,12 +1,16 @@
 package com.crmapp.backend.prospects.service;
 
+import com.crmapp.backend.common.security.RoleGuard;
 import com.crmapp.backend.common.security.TenantContext;
 import com.crmapp.backend.identity.enums.UserRole;
+import com.crmapp.backend.identity.exception.UserNotFoundException;
+import com.crmapp.backend.identity.model.User;
 import com.crmapp.backend.identity.repository.GroupRepository;
 import com.crmapp.backend.identity.repository.UserRepository;
 import com.crmapp.backend.pipeline.service.PipelineService;
 import com.crmapp.backend.prospects.dto.CreateProspectRequest;
 import com.crmapp.backend.prospects.dto.ProspectResponse;
+import com.crmapp.backend.prospects.dto.ReassignProspectRequest;
 import com.crmapp.backend.prospects.enums.ProspectSource;
 import com.crmapp.backend.prospects.exception.ProspectNotFoundException;
 import com.crmapp.backend.prospects.model.Prospect;
@@ -72,6 +76,25 @@ public class ProspectService {
                 : prospectRepository.findByGroup_Id(tenant.getGroupId());
 
         return prospects.stream().map(this::toResponse).toList();
+    }
+
+    /**
+     * UC-202: a HOST / SUPER_ADMIN hands a prospect to another user of the
+     * prospect's group. The target must be in that same group (a group's
+     * prospects never leak to another group, cahier des charges section 3);
+     * anything else is reported as "user not found".
+     */
+    @Transactional
+    public ProspectResponse reassign(UUID prospectId, ReassignProspectRequest request) {
+        RoleGuard.requireAnyRole(UserRole.HOST, UserRole.SUPER_ADMIN);
+        Prospect prospect = getOwnedEntity(prospectId);
+
+        User target = userRepository.findById(request.userId())
+                .filter(user -> user.getGroup().getId().equals(prospect.getGroup().getId()))
+                .orElseThrow(() -> new UserNotFoundException(request.userId()));
+
+        prospect.setAssignedUser(target);
+        return toResponse(prospect);
     }
 
     @Transactional(readOnly = true)
